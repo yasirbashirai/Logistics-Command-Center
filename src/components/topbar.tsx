@@ -1,13 +1,16 @@
 import { db } from "@/lib/db";
 import { fmtDate } from "@/lib/utils";
-import { getCurrentDayNumber, getTodayScore, getStreak, getNorthStarWeek } from "@/lib/scoring";
+import { getCurrentDayNumber, getTodayScore, getStreak, getNorthStarWeek, getMonthNumberFromDay } from "@/lib/scoring";
 import { Flame, Target as TargetIcon, TrendingUp } from "lucide-react";
+import ThemeToggle from "./theme-toggle";
 
 export default async function TopBar() {
   const app = await db.appState.findUnique({ where: { id: 1 } });
   if (!app) return null;
   const now = new Date();
   const dayNumber = getCurrentDayNumber(app.startDate, now);
+  const monthNumber = getMonthNumberFromDay(dayNumber);
+  const dayInMonth = ((dayNumber - 1) % 30) + 1;
   const { score, points, maxPoints } = await getTodayScore(now);
   const streak = await getStreak(now);
   const northStar = await getNorthStarWeek(now);
@@ -17,7 +20,9 @@ export default async function TopBar() {
       <div className="flex items-center gap-4">
         <div>
           <div className="text-xs text-fg-muted uppercase tracking-wider">
-            {dayNumber > 0 && dayNumber <= 30 ? `Day ${dayNumber} of 30` : dayNumber > 30 ? `Day ${dayNumber} (post-plan)` : "Pre-launch"}
+            {dayNumber < 1
+              ? "Pre-launch"
+              : `Month ${monthNumber} · Day ${dayInMonth} of 30 (overall Day ${dayNumber})`}
           </div>
           <div className="text-base font-semibold">
             {fmtDate(now, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
@@ -29,6 +34,7 @@ export default async function TopBar() {
         <ScoreChip label="Today's Score" value={`${Math.round(score)}%`} sub={`${Math.round(points)} / ${maxPoints} pts`} tone={score >= 80 ? "success" : score >= 50 ? "warn" : "danger"} icon={<TargetIcon className="w-4 h-4" />} />
         <ScoreChip label="Booked Calls (week)" value={`${northStar.value}/${northStar.target}`} sub="North Star" tone={northStar.value >= northStar.target ? "success" : northStar.value >= northStar.target / 2 ? "warn" : "danger"} icon={<TrendingUp className="w-4 h-4" />} />
         <ScoreChip label="Streak" value={`${streak}🔥`} sub={streak >= 7 ? "Hot" : "Build it"} tone={streak >= 7 ? "success" : "info"} icon={<Flame className="w-4 h-4" />} />
+        <ThemeToggle />
       </div>
     </header>
   );

@@ -9,6 +9,9 @@ import { seedPersonas } from "./seed/personas";
 import { seedCompliance } from "./seed/compliance";
 import { seedWarnings } from "./seed/warnings";
 import { seedDecisions } from "./seed/decisions";
+import { seedMonths } from "./seed/months";
+import { seedAds } from "./seed/ads";
+import { seedContent } from "./seed/content";
 
 const db = new PrismaClient();
 
@@ -16,11 +19,15 @@ async function main() {
   console.log("🌱 Seeding Logistics Command Center...");
 
   // Reset everything (idempotent re-seed)
+  await db.adMetric.deleteMany();
+  await db.adCreative.deleteMany();
+  await db.adCampaign.deleteMany();
   await db.kpiLog.deleteMany();
   await db.recurringLog.deleteMany();
   await db.scoreSnapshot.deleteMany();
   await db.dailyTask.deleteMany();
   await db.day.deleteMany();
+  await db.month.deleteMany();
   await db.recurringTask.deleteMany();
   await db.kpiDefinition.deleteMany();
   await db.referral.deleteMany();
@@ -49,6 +56,7 @@ async function main() {
     },
   });
 
+  await seedMonths(db);
   await seedDays(db);
   await seedRecurring(db);
   await seedKpis(db);
@@ -59,6 +67,8 @@ async function main() {
   await seedCompliance(db);
   await seedWarnings(db);
   await seedDecisions(db);
+  await seedAds(db);
+  await seedContent(db);
 
   console.log("✅ Seed complete.");
 }

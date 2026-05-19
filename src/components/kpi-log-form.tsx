@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { logKpi } from "@/lib/actions";
+import { toast } from "sonner";
 import { Plus } from "lucide-react";
 
 export default function KpiLogForm({ kpiId, unit }: { kpiId: number; unit: string }) {
@@ -12,7 +13,10 @@ export default function KpiLogForm({ kpiId, unit }: { kpiId: number; unit: strin
     e.preventDefault();
     const n = parseFloat(value);
     if (isNaN(n)) return;
-    startTransition(() => logKpi(kpiId, n));
+    startTransition(async () => {
+      await logKpi(kpiId, n);
+      toast.success(`Logged ${n}${unit === "%" ? "%" : ` ${unit}`}`, { description: "KPI entry saved" });
+    });
     setValue("");
   };
 

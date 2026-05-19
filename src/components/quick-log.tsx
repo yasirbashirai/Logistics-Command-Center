@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Plus, Minus, Check } from "lucide-react";
+import { toast } from "sonner";
 import { logRecurring } from "@/lib/actions";
 import { cn } from "@/lib/utils";
 
@@ -34,9 +35,20 @@ export default function QuickLog({
   const quickButtons = pickQuickButtons(target, unit);
 
   const log = (delta: number) => {
-    setOptimistic((o) => Math.max(0, o + delta));
-    startTransition(() => {
-      logRecurring(id, delta);
+    const newVal = Math.max(0, optimistic + delta);
+    setOptimistic(newVal);
+    startTransition(async () => {
+      await logRecurring(id, delta);
+      if (delta > 0) {
+        const earned = Math.min(delta, Math.max(0, target - optimistic));
+        const points = (earned * (target > 0 ? 1 : 0)) > 0 ? `+${(earned * 0.5).toFixed(0)} pts` : "+0 pts";
+        const hitTarget = newVal >= target && optimistic < target;
+        if (hitTarget) {
+          toast.success(`🎯 Target hit: ${title}`, { description: `${newVal}/${target} ${unit} — keep going!` });
+        } else {
+          toast.success(`+${delta} ${unit}`, { description: `${title} · ${newVal}/${target} this day` });
+        }
+      }
     });
   };
 

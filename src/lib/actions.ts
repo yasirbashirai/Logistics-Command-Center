@@ -142,3 +142,164 @@ export async function updateStartDate(date: Date) {
   });
   revalidatePath("/", "layout");
 }
+
+// ─── Ads ───
+export async function updateAdCampaignStatus(id: number, status: string) {
+  await db.adCampaign.update({
+    where: { id },
+    data: {
+      status,
+      startDate: status === "active" ? new Date() : undefined,
+      endDate: status === "killed" || status === "paused" ? new Date() : undefined,
+    },
+  });
+  revalidatePath("/ads");
+}
+
+export async function updateAdCampaignBudget(id: number, dailyBudget: number) {
+  const monthly = dailyBudget * 30;
+  await db.adCampaign.update({
+    where: { id },
+    data: { dailyBudget, monthlyBudget: monthly },
+  });
+  revalidatePath("/ads");
+}
+
+export async function createAdCampaign(data: {
+  name: string;
+  platform: string;
+  campaignType: string;
+  monthNumber: number;
+  dailyBudget: number;
+  audience?: string;
+  objective?: string;
+}) {
+  await db.adCampaign.create({
+    data: { ...data, monthlyBudget: data.dailyBudget * 30 },
+  });
+  revalidatePath("/ads");
+}
+
+export async function updateCreativeStatus(id: number, status: string) {
+  await db.adCreative.update({ where: { id }, data: { status } });
+  revalidatePath("/ads");
+}
+
+export async function createAdCreative(data: {
+  campaignId: number;
+  name: string;
+  format: string;
+  hook?: string;
+  body?: string;
+  cta?: string;
+  scriptKeyRef?: string;
+}) {
+  await db.adCreative.create({ data });
+  revalidatePath("/ads");
+}
+
+export async function logAdMetric(data: {
+  campaignId: number;
+  spend: number;
+  impressions?: number;
+  clicks?: number;
+  leads?: number;
+  bookedCalls?: number;
+  notes?: string;
+}) {
+  await db.adMetric.create({
+    data: {
+      campaignId: data.campaignId,
+      date: new Date(),
+      spend: data.spend,
+      impressions: data.impressions ?? 0,
+      clicks: data.clicks ?? 0,
+      leads: data.leads ?? 0,
+      bookedCalls: data.bookedCalls ?? 0,
+      notes: data.notes,
+    },
+  });
+  revalidatePath("/ads");
+}
+
+// ─── Content enhancements ───
+export async function updateContentDetails(
+  id: number,
+  data: { title?: string; hookText?: string; body?: string; postUrl?: string; imageUrl?: string; videoUrl?: string; scheduledFor?: Date | null; platform?: string; dayOfWeek?: string | null; weekNumber?: number | null; status?: string; }
+) {
+  await db.contentItem.update({ where: { id }, data });
+  revalidatePath("/content");
+}
+
+export async function logContentEngagement(id: number, data: { likes?: number; comments?: number; reach?: number; shares?: number; inboundDms?: number; }) {
+  await db.contentItem.update({ where: { id }, data });
+  revalidatePath("/content");
+}
+
+// ─── Month + Plan extensibility ───
+export async function createCustomDay(data: {
+  dayNumber: number;
+  monthNumber: number;
+  weekNumber: number;
+  weekday: string;
+  label: string;
+  focusArea: string;
+  hoursEstimated: number;
+  weeklyTheme?: string;
+}) {
+  await db.day.create({ data: { ...data, isCustom: true } });
+  revalidatePath("/plan");
+}
+
+export async function createCustomTask(data: {
+  dayId: number;
+  title: string;
+  category: string;
+  hoursEstimated: number;
+  description?: string;
+  deliverable?: string;
+  pointsValue: number;
+}) {
+  const lastTask = await db.dailyTask.findFirst({ where: { dayId: data.dayId }, orderBy: { sortOrder: "desc" } });
+  await db.dailyTask.create({
+    data: { ...data, sortOrder: (lastTask?.sortOrder ?? 0) + 1 },
+  });
+  revalidatePath("/today");
+  revalidatePath("/plan");
+}
+
+export async function cloneDayTo(sourceDayNumber: number, targetDayNumber: number, targetMonth: number, targetWeek: number, targetWeekday: string) {
+  const source = await db.day.findUnique({ where: { dayNumber: sourceDayNumber }, include: { tasks: true } });
+  if (!source) return;
+  const cloned = await db.day.create({
+    data: {
+      dayNumber: targetDayNumber,
+      monthNumber: targetMonth,
+      weekNumber: targetWeek,
+      weekday: targetWeekday,
+      label: `${source.label} (cloned from Day ${sourceDayNumber})`,
+      focusArea: source.focusArea,
+      hoursEstimated: source.hoursEstimated,
+      weeklyTheme: source.weeklyTheme,
+      isCustom: true,
+    },
+  });
+  for (const t of source.tasks) {
+    await db.dailyTask.create({
+      data: {
+        dayId: cloned.id,
+        title: t.title,
+        description: t.description,
+        category: t.category,
+        hoursEstimated: t.hoursEstimated,
+        deliverable: t.deliverable,
+        priority: t.priority,
+        sortOrder: t.sortOrder,
+        pointsValue: t.pointsValue,
+        scriptRef: t.scriptRef,
+        toolsNeeded: t.toolsNeeded,
+      },
+    });
+  }
+  revalidatePath("/plan");
+}

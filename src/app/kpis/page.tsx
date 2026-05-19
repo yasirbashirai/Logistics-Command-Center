@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { getCurrentDayNumber, getHealthChecks, getTodayScore, getWeeklyScore, getMonthlyScore, getNorthStarWeek } from "@/lib/scoring";
 import { startOfWeek, addDays, startOfMonth } from "@/lib/dates";
 import KpiLogForm from "@/components/kpi-log-form";
+import Sparkline from "@/components/sparkline";
 import { TrendingUp, CheckCircle, AlertTriangle, XCircle, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -61,30 +62,39 @@ export default async function KpisPage() {
           <span className="text-xs text-fg-muted">PLAN §15.3 — week to date</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {healthChecks.map((h) => (
-            <div key={h.id} className="card p-4">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="text-xs text-fg-muted uppercase tracking-wider">{h.category}</div>
-                  <div className="text-sm font-semibold leading-tight mt-0.5">{h.name}</div>
+          {healthChecks.map((h) => {
+            const sparkValues = (h.logs ?? []).slice(-14).map((l) => l.value);
+            const sparkColor = h.status === "pass" ? "rgb(34 197 94)" : h.status === "warn" ? "rgb(217 119 6)" : "rgb(220 38 38)";
+            return (
+              <div key={h.id} className="card p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="text-xs text-fg-muted uppercase tracking-wider">{h.category}</div>
+                    <div className="text-sm font-semibold leading-tight mt-0.5">{h.name}</div>
+                  </div>
+                  <StatusIcon status={h.status} />
                 </div>
-                <StatusIcon status={h.status} />
-              </div>
-              <div className="flex items-baseline gap-2 mt-3">
-                <span className="text-2xl font-bold">{h.value.toFixed(0)}<span className="text-base text-fg-muted">{h.unit === "%" ? "%" : ""}</span></span>
-                <span className="text-xs text-fg-subtle">target {h.target}{h.unit === "%" ? "%" : ""} · min {h.thresholdMin}{h.unit === "%" ? "%" : ""}</span>
-              </div>
-              <div className="mt-2 flex items-center justify-between gap-2">
-                <KpiLogForm kpiId={h.id} unit={h.unit} />
-                <span className="text-[10px] text-fg-subtle">{h.logs?.length ?? 0} entries</span>
-              </div>
-              {h.status === "fail" && h.failureMode && (
-                <div className="mt-3 text-[11px] text-danger bg-danger/5 border border-danger/20 rounded-md p-2 leading-snug">
-                  ⚠ {h.failureMode}
+                <div className="flex items-end justify-between gap-2 mt-3">
+                  <div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-bold">{h.value.toFixed(0)}<span className="text-base text-fg-muted">{h.unit === "%" ? "%" : ""}</span></span>
+                    </div>
+                    <span className="text-xs text-fg-subtle">target {h.target}{h.unit === "%" ? "%" : ""} · min {h.thresholdMin}{h.unit === "%" ? "%" : ""}</span>
+                  </div>
+                  <Sparkline values={sparkValues} color={sparkColor} width={70} height={24} />
                 </div>
-              )}
-            </div>
-          ))}
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <KpiLogForm kpiId={h.id} unit={h.unit} />
+                  <span className="text-[10px] text-fg-subtle">{h.logs?.length ?? 0} entries</span>
+                </div>
+                {h.status === "fail" && h.failureMode && (
+                  <div className="mt-3 text-[11px] text-danger bg-danger/5 border border-danger/20 rounded-md p-2 leading-snug">
+                    ⚠ {h.failureMode}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </section>
 

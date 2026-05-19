@@ -2,7 +2,8 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { getCurrentDayNumber } from "@/lib/scoring";
 import { startOfDay, addDays } from "@/lib/dates";
-import { fmtDate, cn } from "@/lib/utils";
+import { fmtDate, fmtMoney, cn } from "@/lib/utils";
+import { ChevronRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,7 @@ export default async function PlanPage() {
   const app = await db.appState.findUnique({ where: { id: 1 } });
   if (!app) return null;
   const currentDay = getCurrentDayNumber(app.startDate, now);
+  const months = await db.month.findMany({ orderBy: { monthNumber: "asc" } });
   const days = await db.day.findMany({
     orderBy: { dayNumber: "asc" },
     include: { tasks: true },
@@ -28,13 +30,57 @@ export default async function PlanPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">30-Day Plan</h1>
+        <h1 className="text-2xl font-bold">Plan</h1>
         <p className="text-fg-muted text-sm mt-1">
-          From {fmtDate(app.startDate, { month: "long", day: "numeric", year: "numeric" })} to {fmtDate(addDays(app.startDate, 29), { month: "long", day: "numeric", year: "numeric" })}.
-          Click any day to drill in.
+          30-day Month 1 baseline · Months 2-6 extensible. Started {fmtDate(app.startDate, { month: "long", day: "numeric", year: "numeric" })}.
         </p>
       </div>
 
+      {/* Month overview strip */}
+      <section>
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-fg-muted mb-3">Months</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+          {months.map((m) => {
+            const monthCurrent = currentDay >= m.startDayNumber && currentDay <= m.endDayNumber;
+            const monthDone = currentDay > m.endDayNumber;
+            const monthDays = days.filter((d) => d.monthNumber === m.monthNumber);
+            const tasksAll = monthDays.flatMap((d) => d.tasks);
+            const tasksDone = tasksAll.filter((t) => t.status === "completed").length;
+            const pct = tasksAll.length > 0 ? (tasksDone / tasksAll.length) * 100 : 0;
+            return (
+              <Link
+                key={m.id}
+                href={`/plan/month/${m.monthNumber}`}
+                className={cn("card p-4 hover:shadow-lift transition-shadow", monthCurrent && "ring-2 ring-brand")}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="text-[10px] uppercase tracking-wider text-fg-muted">Month {m.monthNumber}</div>
+                  {monthCurrent && <span className="pill-brand text-[9px]">current</span>}
+                  {monthDone && <span className="pill text-[9px]">complete</span>}
+                </div>
+                <div className="text-sm font-semibold mt-1 line-clamp-2">{m.theme}</div>
+                <div className="grid grid-cols-3 gap-2 mt-3 text-[10px]">
+                  <Field label="Revenue" v={fmtMoney(m.revenueTarget)} />
+                  <Field label="MRR" v={fmtMoney(m.mrrTarget)} />
+                  <Field label="Ad budget" v={fmtMoney(m.adBudget)} />
+                </div>
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="text-[10px] text-fg-muted">{monthDays.length} day{monthDays.length === 1 ? "" : "s"} created</span>
+                  {tasksAll.length > 0 && <span className="text-[10px] text-fg-muted">{tasksDone}/{tasksAll.length} ({pct.toFixed(0)}%)</span>}
+                </div>
+                {tasksAll.length > 0 && (
+                  <div className="h-1 rounded-full bg-bg-sub mt-1 overflow-hidden">
+                    <div className={cn("h-full", pct === 100 ? "bg-success" : "bg-brand")} style={{ width: `${pct}%` }} />
+                  </div>
+                )}
+                <div className="text-[10px] text-brand mt-2 flex items-center gap-1">Open <ChevronRight className="w-3 h-3" /></div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-fg-muted">Days · Month 1</h2>
       {weeks.map((weekNumber) => {
         const weekDays = byWeek[weekNumber];
         const theme = weekDays[0]?.weeklyTheme;
@@ -112,6 +158,15 @@ export default async function PlanPage() {
           </section>
         );
       })}
+    </div>
+  );
+}
+
+function Field({ label, v }: { label: string; v: string }) {
+  return (
+    <div>
+      <div className="uppercase tracking-wider text-fg-subtle">{label}</div>
+      <div className="font-semibold text-fg text-xs">{v}</div>
     </div>
   );
 }

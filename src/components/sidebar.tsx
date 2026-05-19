@@ -14,6 +14,7 @@ import {
   Sparkles,
   ShieldAlert,
   TruckIcon,
+  Megaphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +27,8 @@ const nav = [
   { href: "/past-clients", label: "Past Clients", icon: Users, hint: "Re-engagement (#1 ROI)" },
   { href: "/channels", label: "Channels", icon: Radio, hint: "15 outreach channels" },
   { href: "/tools", label: "Tools", icon: Wrench, hint: "$264/mo stack" },
-  { href: "/content", label: "Content", icon: Sparkles, hint: "Posts + Looms + ads" },
+  { href: "/content", label: "Content", icon: Sparkles, hint: "Posts + Looms + case studies" },
+  { href: "/ads", label: "Ads", icon: Megaphone, hint: "Campaigns + budget + metrics" },
   { href: "/brain", label: "Compliance & Brain", icon: ShieldAlert, hint: "Rules + personas + warnings" },
 ];
 

@@ -25,13 +25,30 @@ model AppState {
 model Day {
   id             Int          @id @default(autoincrement())
   dayNumber      Int          @unique
+  monthNumber    Int          @default(1)
   weekNumber     Int
   weekday        String
   label          String
   focusArea      String
   hoursEstimated Int          @default(4)
   weeklyTheme    String?
+  isCustom       Boolean      @default(false)
   tasks          DailyTask[]
+}
+
+model Month {
+  id             Int      @id @default(autoincrement())
+  monthNumber    Int      @unique
+  theme          String
+  startDayNumber Int
+  endDayNumber   Int
+  revenueTarget  Int
+  mrrTarget      Int
+  clientsTarget  Int
+  adBudget       Int
+  objectives     String
+  retainerMix    String?
+  notes          String?
 }
 
 model DailyTask {
@@ -233,6 +250,7 @@ model Tool {
 model ContentItem {
   id           Int       @id @default(autoincrement())
   type         String
+  platform     String    @default("linkedin")
   title        String
   status       String    @default("idea")
   dayOfWeek    String?
@@ -241,10 +259,73 @@ model ContentItem {
   hookText     String?
   body         String?
   mediaUrl     String?
+  imageUrl     String?
+  videoUrl     String?
   postUrl      String?
   notes        String?
   weekNumber   Int?
+  monthNumber  Int       @default(1)
+  scriptKeyRef String?
+  // Engagement (post-publish)
+  likes        Int       @default(0)
+  comments     Int       @default(0)
+  reach        Int       @default(0)
+  shares       Int       @default(0)
+  inboundDms   Int       @default(0)
   createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+// -------- Module 11: Paid Ads --------
+model AdCampaign {
+  id             Int      @id @default(autoincrement())
+  name           String
+  platform       String
+  campaignType   String
+  status         String   @default("planned")
+  monthNumber    Int      @default(1)
+  dailyBudget    Float    @default(0)
+  monthlyBudget  Float    @default(0)
+  audience       String?
+  objective      String?
+  startDate      DateTime?
+  endDate        DateTime?
+  notes          String?
+  createdAt      DateTime @default(now())
+  creatives      AdCreative[]
+  metrics        AdMetric[]
+}
+
+model AdCreative {
+  id          Int        @id @default(autoincrement())
+  campaignId  Int
+  campaign    AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  name        String
+  format      String
+  hook        String?
+  body        String?
+  cta         String?
+  scriptKeyRef String?
+  mediaUrl    String?
+  status      String     @default("draft")
+  notes       String?
+  createdAt   DateTime   @default(now())
+}
+
+model AdMetric {
+  id          Int        @id @default(autoincrement())
+  campaignId  Int
+  campaign    AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  date        DateTime
+  spend       Float      @default(0)
+  impressions Int        @default(0)
+  clicks      Int        @default(0)
+  leads       Int        @default(0)
+  bookedCalls Int        @default(0)
+  notes       String?
+  createdAt   DateTime   @default(now())
+
+  @@index([date])
 }
 
 // -------- Module 10: Compliance & Brain --------

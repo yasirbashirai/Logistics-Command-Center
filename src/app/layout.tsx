@@ -2,16 +2,32 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/topbar";
+import { Toaster } from "sonner";
+import ThemeBootstrap from "@/components/theme-bootstrap";
 
 export const metadata: Metadata = {
   title: "Logistics Command Center — Yasir",
-  description: "Operational dashboard for the 30-day Logistics Solutions plan + research.",
+  description: "Operational dashboard for the Logistics Solutions plan + research.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const t = localStorage.getItem("theme") || "dark";
+                if (t === "light") document.documentElement.classList.remove("dark");
+                else document.documentElement.classList.add("dark");
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
       <body className="font-sans">
+        <ThemeBootstrap />
         <div className="flex min-h-screen">
           <Sidebar />
           <div className="flex-1 flex flex-col min-w-0">
@@ -21,6 +37,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </main>
           </div>
         </div>
+        <Toaster
+          position="bottom-right"
+          theme="system"
+          richColors
+          closeButton
+        />
       </body>
     </html>
   );

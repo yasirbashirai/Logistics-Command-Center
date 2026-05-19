@@ -2,14 +2,23 @@ import { db } from "@/lib/db";
 import { addDays, startOfDay, startOfWeek, startOfMonth } from "@/lib/dates";
 
 /**
- * Current Day N of the 30-day plan. Day 1 = startDate, Day 30 = startDate + 29.
- * Returns 0 if before start, 31+ if after Day 30.
+ * Current Day N of the plan. Day 1 = startDate.
+ * Returns 0 if before start. No upper cap — extensible to Month 2, 3, ...
  */
 export function getCurrentDayNumber(startDate: Date, now: Date): number {
   const a = startOfDay(startDate);
   const b = startOfDay(now);
   const diff = Math.floor((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
   return diff + 1;
+}
+
+/**
+ * Compute current month number from day number.
+ * Default rolling 30-day months if no Month rows defined: Day 1-30 = M1, 31-60 = M2, etc.
+ */
+export function getMonthNumberFromDay(dayNumber: number): number {
+  if (dayNumber < 1) return 0;
+  return Math.ceil(dayNumber / 30);
 }
 
 /**

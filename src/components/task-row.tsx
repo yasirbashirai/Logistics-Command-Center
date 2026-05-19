@@ -2,6 +2,7 @@
 
 import { useTransition, useState } from "react";
 import { Check, Clock, AlertCircle, FileText, Wrench as WrenchIcon } from "lucide-react";
+import { toast } from "sonner";
 import { toggleTaskStatus } from "@/lib/actions";
 import { cn } from "@/lib/utils";
 
@@ -34,8 +35,16 @@ export default function TaskRow({
   const [completed, setCompleted] = useState(status === "completed");
 
   const onToggle = () => {
-    setCompleted((c) => !c);
-    startTransition(() => toggleTaskStatus(id));
+    const next = !completed;
+    setCompleted(next);
+    startTransition(async () => {
+      await toggleTaskStatus(id);
+      if (next) {
+        toast.success(`✓ +${pointsValue} pts`, { description: title.length > 60 ? title.slice(0, 60) + "…" : title });
+      } else {
+        toast(`↩ Task re-opened`, { description: title.length > 60 ? title.slice(0, 60) + "…" : title });
+      }
+    });
   };
 
   return (

@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { getCurrentDayNumber, getTodayScore, getNorthStarWeek, getHealthChecks } from "@/lib/scoring";
+import { getCurrentDayNumber, getTodayScore, getNorthStarWeek, getHealthChecks, getMonthNumberFromDay } from "@/lib/scoring";
 import { startOfDay, addDays } from "@/lib/dates";
 import TaskRow from "@/components/task-row";
 import QuickLog from "@/components/quick-log";
@@ -17,10 +17,10 @@ export default async function TodayPage() {
   const today = startOfDay(now);
   const tomorrow = addDays(today, 1);
 
-  const day =
-    dayN > 0 && dayN <= 30
-      ? await db.day.findUnique({ where: { dayNumber: dayN }, include: { tasks: { orderBy: { sortOrder: "asc" } } } })
-      : null;
+  const day = dayN > 0
+    ? await db.day.findUnique({ where: { dayNumber: dayN }, include: { tasks: { orderBy: { sortOrder: "asc" } } } })
+    : null;
+  const monthNumber = getMonthNumberFromDay(dayN);
 
   const recurring = await db.recurringTask.findMany({
     where: { activeFromDay: { lte: dayN }, activeToDay: { gte: dayN } },
@@ -47,14 +47,30 @@ export default async function TodayPage() {
       </div>
     );
   }
-  if (dayN > 30) {
+  if (!day) {
     return (
       <div className="max-w-2xl mx-auto py-12 text-center">
-        <h1 className="text-2xl font-bold mb-3">Month 1 complete</h1>
-        <p className="text-fg-muted">You shipped 30 days. Open KPIs to review your numbers, then write your Month 2 plan.</p>
-        <div className="mt-6">
-          <Link href="/kpis" className="btn-brand">Review M1 KPIs →</Link>
+        <h1 className="text-2xl font-bold mb-3">Day {dayN} not in plan yet</h1>
+        <p className="text-fg-muted text-sm">You're past Day 30 — Month {monthNumber} hasn't been planned out yet. Open the Plan and clone days from Month 1, or create custom days for Month {monthNumber}.</p>
+        <div className="mt-6 flex items-center gap-3 justify-center">
+          <Link href={`/plan/month/${monthNumber}`} className="btn-brand">Plan Month {monthNumber} →</Link>
+          <Link href="/kpis" className="btn">Review KPIs</Link>
         </div>
+        <p className="text-fg-subtle text-xs mt-6">Your daily cadence loggers below stay active forever — keep dialing, emailing, posting.</p>
+
+        {recurring.length > 0 && (
+          <section className="mt-8">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-fg-muted mb-3 text-left">Daily cadence (quick log)</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-left">
+              {recurring.map((r) => {
+                const actual = r.logs.reduce((s, l) => s + l.actualCount, 0);
+                return (
+                  <QuickLog key={r.id} id={r.id} title={r.title} category={r.category} target={r.target} unit={r.unit} actual={actual} benchmark={r.benchmark} />
+                );
+              })}
+            </div>
+          </section>
+        )}
       </div>
     );
   }
