@@ -1,0 +1,305 @@
+// Prisma schema — Logistics Command Center
+// Covers all 10 dashboard modules + scoring engine.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// -------- App-wide singleton --------
+model AppState {
+  id              Int      @id @default(1)
+  startDate       DateTime
+  founderName     String   @default("Yasir Bashir")
+  agencyName      String   @default("Logistics Solutions")
+  northStarTarget Int      @default(8)
+  mrrTarget       Int      @default(10000)
+  updatedAt       DateTime @updatedAt
+}
+
+// -------- Module 1+2: Plan & Today --------
+model Day {
+  id             Int          @id @default(autoincrement())
+  dayNumber      Int          @unique
+  weekNumber     Int
+  weekday        String
+  label          String
+  focusArea      String
+  hoursEstimated Int          @default(4)
+  weeklyTheme    String?
+  tasks          DailyTask[]
+}
+
+model DailyTask {
+  id             Int       @id @default(autoincrement())
+  dayId          Int
+  day            Day       @relation(fields: [dayId], references: [id])
+  title          String
+  description    String?
+  category       String
+  hoursEstimated Float     @default(1)
+  deliverable    String?
+  status         String    @default("pending")
+  priority       String    @default("normal")
+  sortOrder      Int       @default(0)
+  pointsValue    Int       @default(10)
+  completedAt    DateTime?
+  scriptRef      String?
+  toolsNeeded    String?
+}
+
+model RecurringTask {
+  id              Int            @id @default(autoincrement())
+  key             String         @unique
+  title           String
+  category        String
+  target          Int
+  unit            String
+  pointsPerUnit   Float          @default(0.1)
+  activeFromDay   Int            @default(8)
+  activeToDay     Int            @default(30)
+  description     String?
+  benchmark       String?
+  logs            RecurringLog[]
+}
+
+model RecurringLog {
+  id              Int           @id @default(autoincrement())
+  recurringTaskId Int
+  recurringTask   RecurringTask @relation(fields: [recurringTaskId], references: [id])
+  date            DateTime
+  actualCount     Int
+  notes           String?
+  createdAt       DateTime      @default(now())
+
+  @@index([date])
+}
+
+// -------- Module 3: KPIs --------
+model KpiDefinition {
+  id              Int      @id @default(autoincrement())
+  key             String   @unique
+  name            String
+  unit            String
+  category        String
+  weeklyTarget    Float?
+  monthlyTarget   Float?
+  thresholdMin    Float?
+  thresholdHigher Boolean  @default(true)
+  isNorthStar     Boolean  @default(false)
+  isHealthCheck   Boolean  @default(false)
+  description     String?
+  failureMode     String?
+  logs            KpiLog[]
+}
+
+model KpiLog {
+  id        Int           @id @default(autoincrement())
+  kpiId     Int
+  kpi       KpiDefinition @relation(fields: [kpiId], references: [id], onDelete: Cascade)
+  date      DateTime
+  value     Float
+  notes     String?
+  createdAt DateTime      @default(now())
+
+  @@index([date])
+}
+
+model ScoreSnapshot {
+  id             Int      @id @default(autoincrement())
+  date           DateTime @unique
+  dailyScore     Float
+  weeklyScore    Float
+  monthlyScore   Float
+  streak         Int
+  northStarValue Float
+  createdAt      DateTime @default(now())
+}
+
+// -------- Module 4: Pipeline --------
+model Lead {
+  id             Int       @id @default(autoincrement())
+  name           String
+  company        String?
+  email          String?
+  phone          String?
+  source         String
+  persona        String?
+  stage          String    @default("new")
+  estimatedValue Float     @default(0)
+  retainerValue  Float     @default(0)
+  painPoint      String?
+  notes          String?
+  tags           String?
+  lastActivityAt DateTime  @default(now())
+  stageEnteredAt DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  closedAt       DateTime?
+
+  @@index([stage])
+}
+
+// -------- Module 5: Scripts --------
+model Script {
+  id             Int     @id @default(autoincrement())
+  key            String  @unique
+  title          String
+  category       String
+  persona        String  @default("general")
+  funnelStage    String?
+  subject        String?
+  body           String
+  variables      String?
+  notes          String?
+  dayAppliedFrom Int?
+  sortOrder      Int     @default(0)
+}
+
+// -------- Module 6: Past Clients --------
+model PastClient {
+  id                     Int        @id @default(autoincrement())
+  name                   String
+  company                String?
+  email                  String?
+  platform               String
+  originalProjectYear    Int?
+  originalProjectSummary String?
+  segment                String     @default("B")
+  status                 String     @default("not_contacted")
+  loomRecorded           Boolean    @default(false)
+  loomUrl                String?
+  notes                  String?
+  lastContactedAt        DateTime?
+  repliedAt              DateTime?
+  bookedAt               DateTime?
+  closedAt               DateTime?
+  createdAt              DateTime   @default(now())
+  referrals              Referral[]
+}
+
+model Referral {
+  id              Int        @id @default(autoincrement())
+  pastClientId    Int
+  pastClient      PastClient @relation(fields: [pastClientId], references: [id])
+  referredName    String
+  referredCompany String?
+  status          String     @default("pending")
+  payoutAmount    Float      @default(500)
+  payoutPaid      Boolean    @default(false)
+  notes           String?
+  createdAt       DateTime   @default(now())
+}
+
+// -------- Module 7: Channels --------
+model Channel {
+  id              Int     @id @default(autoincrement())
+  key             String  @unique
+  name            String
+  priority        String
+  status          String  @default("active")
+  role            String
+  weeklyTarget    Int     @default(0)
+  unit            String  @default("count")
+  costPerMonth    Float   @default(0)
+  expectedClients String?
+  benchmarks      String?
+  bestPractice    String?
+  rules           String?
+  notes           String?
+  sortOrder       Int     @default(0)
+}
+
+// -------- Module 8: Tools --------
+model Tool {
+  id                   Int       @id @default(autoincrement())
+  name                 String    @unique
+  role                 String
+  category             String
+  plan                 String?
+  costPerMonth         Float     @default(0)
+  status               String    @default("active")
+  loginUrl             String?
+  alternativesRuledOut String?
+  warning              String?
+  warningDate          DateTime?
+  sortOrder            Int       @default(0)
+}
+
+// -------- Module 9: Content Engine --------
+model ContentItem {
+  id           Int       @id @default(autoincrement())
+  type         String
+  title        String
+  status       String    @default("idea")
+  dayOfWeek    String?
+  scheduledFor DateTime?
+  publishedAt  DateTime?
+  hookText     String?
+  body         String?
+  mediaUrl     String?
+  postUrl      String?
+  notes        String?
+  weekNumber   Int?
+  createdAt    DateTime  @default(now())
+}
+
+// -------- Module 10: Compliance & Brain --------
+model Persona {
+  id                  Int                @id @default(autoincrement())
+  key                 String             @unique
+  name                String
+  decisionMaker       String
+  secondaryInfluencer String?
+  topPains            String
+  websiteAngle        String
+  budgetRange         String
+  salesCycle          String
+  priorityQuarter     String?
+  techLiteracy        String?
+  notes               String?
+  objections          ObjectionHandler[]
+}
+
+model ObjectionHandler {
+  id          Int      @id @default(autoincrement())
+  objection   String
+  realMeaning String
+  counter     String
+  personaId   Int?
+  persona     Persona? @relation(fields: [personaId], references: [id])
+  notes       String?
+}
+
+model ComplianceRule {
+  id        Int    @id @default(autoincrement())
+  rule      String
+  reason    String
+  category  String
+  severity  String @default("mandatory")
+  source    String?
+  sortOrder Int    @default(0)
+}
+
+model TimedWarning {
+  id            Int      @id @default(autoincrement())
+  title         String
+  eventDate     DateTime
+  type          String
+  description   String
+  affectedAreas String?
+  action        String?
+  createdAt     DateTime @default(now())
+}
+
+model DecisionRule {
+  id           Int    @id @default(autoincrement())
+  trigger      String
+  action       String
+  sourceModule String
+  severity     String @default("alert")
+  notes        String?
+}

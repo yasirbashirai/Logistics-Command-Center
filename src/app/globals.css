@@ -3,25 +3,86 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: 247 248 250;
+  --bg-sub: 240 242 245;
+  --bg-card: 255 255 255;
+  --bg-elev: 255 255 255;
+  --fg: 15 23 42;
+  --fg-muted: 71 85 105;
+  --fg-subtle: 148 163 184;
+  --border: 226 232 240;
+  --border-strong: 203 213 225;
+  --brand: 14 116 144;       /* deep cyan — logistics steel */
+  --brand-fg: 255 255 255;
+  --success: 22 163 74;
+  --warn: 217 119 6;
+  --danger: 220 38 38;
+  --info: 37 99 235;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --bg: 9 13 22;
+  --bg-sub: 15 21 33;
+  --bg-card: 22 30 45;
+  --bg-elev: 30 40 58;
+  --fg: 241 245 249;
+  --fg-muted: 148 163 184;
+  --fg-subtle: 100 116 139;
+  --border: 35 47 65;
+  --border-strong: 51 65 85;
+  --brand: 34 197 217;
+  --brand-fg: 9 13 22;
+  --success: 34 197 94;
+  --warn: 251 146 60;
+  --danger: 248 113 113;
+  --info: 96 165 250;
+}
+
+* {
+  border-color: rgb(var(--border));
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background: rgb(var(--bg));
+  color: rgb(var(--fg));
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  .text-balance { text-wrap: balance; }
+  .scrollbar-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: rgb(var(--border-strong)); border-radius: 4px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+}
+
+@layer components {
+  .card {
+    @apply bg-bg-card border border-border rounded-xl shadow-card;
+  }
+  .card-elev {
+    @apply bg-bg-elev border border-border rounded-xl shadow-card;
+  }
+  .pill {
+    @apply inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border border-border bg-bg-sub text-fg-muted;
+  }
+  .pill-success { @apply pill bg-success/10 text-success border-success/20; }
+  .pill-warn { @apply pill bg-warn/10 text-warn border-warn/30; }
+  .pill-danger { @apply pill bg-danger/10 text-danger border-danger/30; }
+  .pill-info { @apply pill bg-info/10 text-info border-info/30; }
+  .pill-brand { @apply pill bg-brand/10 text-brand border-brand/30; }
+
+  .btn {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium border border-border bg-bg-card hover:bg-bg-sub transition-colors;
+  }
+  .btn-brand {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium bg-brand text-brand-fg hover:opacity-90 transition-opacity;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-sm font-medium text-fg-muted hover:bg-bg-sub hover:text-fg transition-colors;
+  }
+
+  .input {
+    @apply w-full px-3 py-2 rounded-md border border-border bg-bg-card text-fg placeholder:text-fg-subtle focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand/60;
   }
 }
