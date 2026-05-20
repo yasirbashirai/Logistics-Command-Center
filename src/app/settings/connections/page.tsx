@@ -22,7 +22,7 @@ export default async function ConnectionsPage() {
           <ShieldCheck className={connectedCount > 0 ? "w-5 h-5 text-success" : "w-5 h-5 text-fg-subtle"} />
           <div className="flex-1">
             <div className="text-sm font-semibold">{connectedCount} of 8 platforms connected</div>
-            <div className="text-xs text-fg-muted">{connectedCount === 0 ? "Click Connect on any platform below to start. Ayrshare = single setup for all." : "Posts publish automatically when scheduled time hits (Vercel Cron worker runs every 5 min)."}</div>
+            <div className="text-xs text-fg-muted">{connectedCount === 0 ? "Click Connect on any platform below to start. Ayrshare = single setup for all." : "Scheduled posts publish via Vercel Cron once daily (Hobby plan limit). Trigger manually any time by visiting /api/cron/publish-scheduled."}</div>
           </div>
         </div>
       </div>
@@ -33,7 +33,7 @@ export default async function ConnectionsPage() {
           <div className="text-sm leading-relaxed">
             <div className="font-semibold mb-1">How real-time scheduling works</div>
             <div className="text-fg-muted">
-              Each platform needs an API key or OAuth token. Paste via "Connect" below — stored in your dashboard DB. Scheduled posts publish via a background worker (Vercel Cron runs <code>/api/cron/publish-scheduled</code> every 5 min). Until then, the existing "Copy + Open Composer" workflow keeps working.
+              Each platform needs an API key or OAuth token. Paste via "Connect" below — stored in your dashboard DB. Scheduled posts publish via Vercel Cron (<code>/api/cron/publish-scheduled</code>) — once daily on Hobby plan, more frequent on Pro. You can also trigger the publisher manually by visiting that URL. Until then, the existing "Copy + Open Composer" workflow keeps working.
             </div>
             <div className="text-fg-muted mt-2">
               <strong>Fastest path:</strong> <a href="https://www.ayrshare.com" target="_blank" className="text-brand underline">Ayrshare</a> ($24/mo) — one key, posts to all platforms. Skip per-platform OAuth approval.

@@ -105,10 +105,12 @@ Real-time social posting requires a worker that processes `ScheduledPost` rows. 
 ```json
 {
   "crons": [
-    { "path": "/api/cron/publish-scheduled", "schedule": "*/5 * * * *" }
+    { "path": "/api/cron/publish-scheduled", "schedule": "0 0 * * *" }
   ]
 }
 ```
+
+**Hobby plan limit:** Vercel Hobby tier only allows daily crons (one run per day). The default schedule is `0 0 * * *` (midnight UTC). For more frequent publishing (every 5 min / every hour), upgrade to Pro and change the schedule string. Manual trigger is always available — visit `https://your-domain.vercel.app/api/cron/publish-scheduled` from a browser to drain the queue on demand.
 
 Implement `/api/cron/publish-scheduled` to:
 1. Query `ScheduledPost` where `status = "queued"` AND `scheduledFor <= now()`.
