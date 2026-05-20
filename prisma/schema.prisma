@@ -384,3 +384,34 @@ model DecisionRule {
   severity     String @default("alert")
   notes        String?
 }
+
+// -------- Module 12: Social Connections & Scheduling --------
+model SocialAccount {
+  id            Int      @id @default(autoincrement())
+  platform      String   @unique
+  accountName   String?
+  accountUrl    String?
+  apiKey        String?
+  accessToken   String?
+  refreshToken  String?
+  tokenExpiresAt DateTime?
+  connectedAt   DateTime?
+  status        String   @default("disconnected")
+  scopes        String?
+  notes         String?
+  updatedAt     DateTime @updatedAt
+}
+
+model ScheduledPost {
+  id              Int       @id @default(autoincrement())
+  contentItemId   Int?
+  platform        String
+  body            String
+  mediaUrl        String?
+  scheduledFor    DateTime
+  status          String    @default("queued")
+  externalPostId  String?
+  errorMessage    String?
+  publishedAt     DateTime?
+  createdAt       DateTime  @default(now())
+}

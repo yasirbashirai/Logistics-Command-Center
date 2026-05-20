@@ -3,6 +3,7 @@ import { fmtDate } from "@/lib/utils";
 import { getCurrentDayNumber, getTodayScore, getStreak, getNorthStarWeek, getMonthNumberFromDay } from "@/lib/scoring";
 import { Flame, Target as TargetIcon, TrendingUp } from "lucide-react";
 import ThemeToggle from "./theme-toggle";
+import CommandPalette from "./command-palette";
 
 export default async function TopBar() {
   const app = await db.appState.findUnique({ where: { id: 1 } });
@@ -31,9 +32,10 @@ export default async function TopBar() {
       </div>
 
       <div className="flex items-center gap-3">
-        <ScoreChip label="Today's Score" value={`${Math.round(score)}%`} sub={`${Math.round(points)} / ${maxPoints} pts`} tone={score >= 80 ? "success" : score >= 50 ? "warn" : "danger"} icon={<TargetIcon className="w-4 h-4" />} />
-        <ScoreChip label="Booked Calls (week)" value={`${northStar.value}/${northStar.target}`} sub="North Star" tone={northStar.value >= northStar.target ? "success" : northStar.value >= northStar.target / 2 ? "warn" : "danger"} icon={<TrendingUp className="w-4 h-4" />} />
-        <ScoreChip label="Streak" value={`${streak}🔥`} sub={streak >= 7 ? "Hot" : "Build it"} tone={streak >= 7 ? "success" : "info"} icon={<Flame className="w-4 h-4" />} />
+        <CommandPalette />
+        <ScoreChip label="Today" value={`${Math.round(score)}%`} sub={`${Math.round(points)}/${maxPoints} pts`} tone={score >= 80 ? "success" : score >= 50 ? "warn" : "danger"} icon={<TargetIcon className="w-4 h-4" />} />
+        <ScoreChip label="Booked (wk)" value={`${northStar.value}/${northStar.target}`} sub="north star" tone={northStar.value >= northStar.target ? "success" : northStar.value >= northStar.target / 2 ? "warn" : "danger"} icon={<TrendingUp className="w-4 h-4" />} />
+        <ScoreChip label="Streak" value={`${streak}🔥`} sub={streak >= 7 ? "Hot" : "Build"} tone={streak >= 7 ? "success" : "info"} icon={<Flame className="w-4 h-4" />} />
         <ThemeToggle />
       </div>
     </header>

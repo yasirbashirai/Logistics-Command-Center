@@ -2,17 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ──────────────────────────────────────────────────────────────
+   Yasir's Logistics Command Center — Brand v2
+   Primary:    #288672 (deep teal)
+   Primary-2:  #36c8a9 (mint accent)
+   Background: #f9ebdc (warm cream — light mode)
+   ────────────────────────────────────────────────────────────── */
+
 :root {
-  --bg: 247 248 250;
-  --bg-sub: 240 242 245;
-  --bg-card: 255 255 255;
+  --bg: 249 235 220;            /* #f9ebdc cream */
+  --bg-sub: 244 226 207;        /* slightly darker cream */
+  --bg-card: 255 252 247;       /* near-white card */
   --bg-elev: 255 255 255;
-  --fg: 15 23 42;
-  --fg-muted: 71 85 105;
-  --fg-subtle: 148 163 184;
-  --border: 226 232 240;
-  --border-strong: 203 213 225;
-  --brand: 14 116 144;       /* deep cyan — logistics steel */
+  --fg: 23 53 47;               /* deep brand teal for body text */
+  --fg-muted: 71 99 92;
+  --fg-subtle: 134 156 149;
+  --border: 224 213 198;
+  --border-strong: 199 184 165;
+  --brand: 40 134 114;          /* #288672 */
+  --brand-2: 54 200 169;        /* #36c8a9 */
   --brand-fg: 255 255 255;
   --success: 22 163 74;
   --warn: 217 119 6;
@@ -21,17 +29,18 @@
 }
 
 .dark {
-  --bg: 9 13 22;
-  --bg-sub: 15 21 33;
-  --bg-card: 22 30 45;
-  --bg-elev: 30 40 58;
-  --fg: 241 245 249;
-  --fg-muted: 148 163 184;
-  --fg-subtle: 100 116 139;
-  --border: 35 47 65;
-  --border-strong: 51 65 85;
-  --brand: 34 197 217;
-  --brand-fg: 9 13 22;
+  --bg: 12 24 22;               /* deep brand-teal night */
+  --bg-sub: 18 34 31;
+  --bg-card: 24 44 40;
+  --bg-elev: 32 56 50;
+  --fg: 234 246 242;
+  --fg-muted: 156 181 175;
+  --fg-subtle: 108 138 132;
+  --border: 38 64 58;
+  --border-strong: 55 88 80;
+  --brand: 54 200 169;          /* lighter brand for dark mode contrast */
+  --brand-2: 137 220 196;
+  --brand-fg: 9 22 20;
   --success: 34 197 94;
   --warn: 251 146 60;
   --danger: 248 113 113;
@@ -42,11 +51,17 @@
   border-color: rgb(var(--border));
 }
 
+html {
+  font-size: 16px;              /* ↑ from default 14px on iOS-style screens */
+}
+
 body {
   background: rgb(var(--bg));
   color: rgb(var(--fg));
   font-feature-settings: "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
+  font-size: 0.9375rem;         /* 15px base */
+  line-height: 1.55;
 }
 
 @layer utilities {
@@ -55,8 +70,27 @@ body {
   .scrollbar-thin::-webkit-scrollbar-thumb { background: rgb(var(--border-strong)); border-radius: 4px; }
   .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
 
+  /* Brand gradient utilities — usable anywhere */
+  .bg-brand-gradient {
+    background: linear-gradient(135deg, rgb(var(--brand)) 0%, rgb(var(--brand-2)) 100%);
+  }
+  .text-brand-gradient {
+    background: linear-gradient(135deg, rgb(var(--brand)) 0%, rgb(var(--brand-2)) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  .border-brand-gradient {
+    border-image: linear-gradient(135deg, rgb(var(--brand)), rgb(var(--brand-2))) 1;
+  }
+  .ring-brand-gradient {
+    box-shadow: 0 0 0 2px rgb(var(--brand) / 0.4), 0 0 0 4px rgb(var(--brand-2) / 0.2);
+  }
+
   .animate-fade-up { animation: fadeUp 240ms cubic-bezier(0.16, 1, 0.3, 1); }
   .animate-pulse-once { animation: pulseOnce 600ms ease-out; }
+  .animate-shimmer { animation: shimmer 2.2s linear infinite; background-size: 200% 100%; }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(6px); }
@@ -66,6 +100,10 @@ body {
     0% { transform: scale(1); }
     50% { transform: scale(1.04); }
     100% { transform: scale(1); }
+  }
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
   }
 }
 
@@ -78,25 +116,28 @@ body {
     @apply bg-bg-elev border border-border rounded-xl shadow-card;
   }
   .pill {
-    @apply inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border border-border bg-bg-sub text-fg-muted;
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border border-border bg-bg-sub text-fg-muted;
   }
-  .pill-success { @apply pill bg-success/10 text-success border-success/20; }
+  .pill-success { @apply pill bg-success/10 text-success border-success/30; }
   .pill-warn { @apply pill bg-warn/10 text-warn border-warn/30; }
   .pill-danger { @apply pill bg-danger/10 text-danger border-danger/30; }
   .pill-info { @apply pill bg-info/10 text-info border-info/30; }
   .pill-brand { @apply pill bg-brand/10 text-brand border-brand/30; }
 
   .btn {
-    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium border border-border bg-bg-card hover:bg-bg-sub transition-colors;
+    @apply inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium border border-border bg-bg-card hover:bg-bg-sub hover:border-brand/40 transition-colors;
   }
   .btn-brand {
-    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium bg-brand text-brand-fg hover:opacity-90 transition-opacity;
+    @apply inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium text-brand-fg bg-brand-gradient hover:opacity-90 transition-opacity shadow-card;
   }
   .btn-ghost {
     @apply inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-sm font-medium text-fg-muted hover:bg-bg-sub hover:text-fg transition-colors;
   }
+  .btn-danger {
+    @apply inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium text-danger border border-danger/30 hover:bg-danger/10 transition-colors;
+  }
 
   .input {
-    @apply w-full px-3 py-2 rounded-md border border-border bg-bg-card text-fg placeholder:text-fg-subtle focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand/60;
+    @apply w-full px-3 py-2 rounded-md border border-border bg-bg-card text-fg placeholder:text-fg-subtle focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand/60 transition-colors;
   }
 }

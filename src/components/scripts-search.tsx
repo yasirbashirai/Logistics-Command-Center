@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { Search, Copy, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { EditScriptButton, DeleteScriptButton } from "./script-editor";
 
 type Script = {
   id: number;
@@ -129,9 +130,13 @@ export default function ScriptsSearch({ scripts }: { scripts: Script[] }) {
                         <h3 className="text-base font-semibold leading-tight">{s.title}</h3>
                         {s.subject && <div className="text-sm text-fg-muted italic mt-1">Subject: {s.subject}</div>}
                       </div>
-                      <button onClick={() => copy(s)} className={copiedKey === s.key ? "btn-brand" : "btn"}>
-                        {copiedKey === s.key ? <><Check className="w-3.5 h-3.5" /> Copied</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
-                      </button>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button onClick={() => copy(s)} className={copiedKey === s.key ? "btn-brand" : "btn"}>
+                          {copiedKey === s.key ? <><Check className="w-3.5 h-3.5" /> Copied</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
+                        </button>
+                        <EditScriptButton script={s} />
+                        <DeleteScriptButton id={s.id} title={s.title} />
+                      </div>
                     </div>
                     <pre className="mt-3 text-xs font-mono whitespace-pre-wrap bg-bg-sub border border-border rounded-md p-3 leading-relaxed overflow-x-auto scrollbar-thin max-h-96">{s.body}</pre>
                     {s.variables && (

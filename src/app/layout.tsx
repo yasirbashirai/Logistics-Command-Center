@@ -4,6 +4,7 @@ import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/topbar";
 import { Toaster } from "sonner";
 import ThemeBootstrap from "@/components/theme-bootstrap";
+import Chatbot from "@/components/chatbot";
 
 export const metadata: Metadata = {
   title: "Logistics Command Center — Yasir",
@@ -12,15 +13,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
             __html: `
               try {
-                const t = localStorage.getItem("theme") || "dark";
-                if (t === "light") document.documentElement.classList.remove("dark");
-                else document.documentElement.classList.add("dark");
+                const t = localStorage.getItem("theme") || "light";
+                if (t === "dark") document.documentElement.classList.add("dark");
+                else document.documentElement.classList.remove("dark");
               } catch (e) {}
             `,
           }}
@@ -38,11 +39,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
         <Toaster
-          position="bottom-right"
+          position="top-right"
           theme="system"
           richColors
           closeButton
         />
+        <Chatbot />
       </body>
     </html>
   );

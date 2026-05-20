@@ -236,6 +236,191 @@ export async function logContentEngagement(id: number, data: { likes?: number; c
   revalidatePath("/content");
 }
 
+// ─── Social Accounts & Scheduled Posts ───
+export async function connectSocialAccount(data: {
+  platform: string;
+  accountName?: string;
+  accountUrl?: string;
+  apiKey?: string;
+  accessToken?: string;
+}) {
+  await db.socialAccount.upsert({
+    where: { platform: data.platform },
+    create: {
+      platform: data.platform,
+      accountName: data.accountName,
+      accountUrl: data.accountUrl,
+      apiKey: data.apiKey,
+      accessToken: data.accessToken,
+      connectedAt: new Date(),
+      status: "connected",
+    },
+    update: {
+      accountName: data.accountName,
+      accountUrl: data.accountUrl,
+      apiKey: data.apiKey,
+      accessToken: data.accessToken,
+      connectedAt: new Date(),
+      status: "connected",
+    },
+  });
+  revalidatePath("/settings/connections");
+}
+
+export async function disconnectSocialAccount(platform: string) {
+  await db.socialAccount.update({
+    where: { platform },
+    data: { status: "disconnected", accessToken: null, apiKey: null, refreshToken: null },
+  });
+  revalidatePath("/settings/connections");
+}
+
+export async function schedulePost(data: {
+  contentItemId?: number;
+  platform: string;
+  body: string;
+  mediaUrl?: string;
+  scheduledFor: Date;
+}) {
+  await db.scheduledPost.create({
+    data: { ...data, status: "queued" },
+  });
+  if (data.contentItemId) {
+    await db.contentItem.update({
+      where: { id: data.contentItemId },
+      data: { status: "scheduled", scheduledFor: data.scheduledFor, platform: data.platform },
+    });
+  }
+  revalidatePath("/content");
+  revalidatePath("/settings/connections");
+}
+
+export async function cancelScheduledPost(id: number) {
+  await db.scheduledPost.update({ where: { id }, data: { status: "cancelled" } });
+  revalidatePath("/settings/connections");
+}
+
+// ─── Scripts CRUD ───
+export async function createScript(data: {
+  key: string;
+  title: string;
+  category: string;
+  persona?: string;
+  funnelStage?: string;
+  subject?: string;
+  body: string;
+  variables?: string;
+  notes?: string;
+}) {
+  await db.script.create({ data: { ...data, persona: data.persona ?? "general" } });
+  revalidatePath("/scripts");
+}
+
+export async function updateScript(id: number, data: {
+  title?: string;
+  category?: string;
+  persona?: string;
+  subject?: string | null;
+  body?: string;
+  variables?: string | null;
+  notes?: string | null;
+}) {
+  await db.script.update({ where: { id }, data });
+  revalidatePath("/scripts");
+}
+
+export async function deleteScript(id: number) {
+  await db.script.delete({ where: { id } });
+  revalidatePath("/scripts");
+}
+
+// ─── Tools CRUD ───
+export async function updateTool(id: number, data: {
+  name?: string;
+  role?: string;
+  category?: string;
+  plan?: string | null;
+  costPerMonth?: number;
+  loginUrl?: string | null;
+  warning?: string | null;
+  alternativesRuledOut?: string | null;
+}) {
+  await db.tool.update({ where: { id }, data });
+  revalidatePath("/tools");
+}
+
+export async function createTool(data: {
+  name: string;
+  role: string;
+  category: string;
+  plan?: string;
+  costPerMonth: number;
+  loginUrl?: string;
+}) {
+  await db.tool.create({ data });
+  revalidatePath("/tools");
+}
+
+export async function deleteTool(id: number) {
+  await db.tool.delete({ where: { id } });
+  revalidatePath("/tools");
+}
+
+// ─── Channels CRUD ───
+export async function updateChannel(id: number, data: {
+  name?: string;
+  role?: string;
+  priority?: string;
+  weeklyTarget?: number;
+  unit?: string;
+  costPerMonth?: number;
+  benchmarks?: string | null;
+  bestPractice?: string | null;
+  rules?: string | null;
+  notes?: string | null;
+}) {
+  await db.channel.update({ where: { id }, data });
+  revalidatePath("/channels");
+}
+
+// ─── Compliance + decisions CRUD ───
+export async function createComplianceRule(data: { rule: string; reason: string; category: string; severity: string; source?: string; }) {
+  await db.complianceRule.create({ data });
+  revalidatePath("/brain");
+}
+export async function updateComplianceRule(id: number, data: { rule?: string; reason?: string; category?: string; severity?: string; }) {
+  await db.complianceRule.update({ where: { id }, data });
+  revalidatePath("/brain");
+}
+export async function deleteComplianceRule(id: number) {
+  await db.complianceRule.delete({ where: { id } });
+  revalidatePath("/brain");
+}
+export async function createDecisionRule(data: { trigger: string; action: string; sourceModule: string; severity: string; notes?: string; }) {
+  await db.decisionRule.create({ data });
+  revalidatePath("/brain");
+}
+export async function updateDecisionRule(id: number, data: { trigger?: string; action?: string; sourceModule?: string; severity?: string; notes?: string | null; }) {
+  await db.decisionRule.update({ where: { id }, data });
+  revalidatePath("/brain");
+}
+export async function deleteDecisionRule(id: number) {
+  await db.decisionRule.delete({ where: { id } });
+  revalidatePath("/brain");
+}
+
+// ─── Daily tasks CRUD (add custom mid-day) ───
+export async function deleteDailyTask(id: number) {
+  await db.dailyTask.delete({ where: { id } });
+  revalidatePath("/today");
+  revalidatePath("/plan");
+}
+export async function updateDailyTask(id: number, data: { title?: string; description?: string | null; hoursEstimated?: number; pointsValue?: number; priority?: string; }) {
+  await db.dailyTask.update({ where: { id }, data });
+  revalidatePath("/today");
+  revalidatePath("/plan");
+}
+
 // ─── Month + Plan extensibility ───
 export async function createCustomDay(data: {
   dayNumber: number;

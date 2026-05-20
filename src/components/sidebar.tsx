@@ -15,6 +15,7 @@ import {
   ShieldAlert,
   TruckIcon,
   Megaphone,
+  Plug,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,7 @@ const nav = [
   { href: "/content", label: "Content", icon: Sparkles, hint: "Posts + Looms + case studies" },
   { href: "/ads", label: "Ads", icon: Megaphone, hint: "Campaigns + budget + metrics" },
   { href: "/brain", label: "Compliance & Brain", icon: ShieldAlert, hint: "Rules + personas + warnings" },
+  { href: "/settings/connections", label: "Connections", icon: Plug, hint: "Link FB / LinkedIn / IG" },
 ];
 
 export default function Sidebar() {
@@ -38,11 +40,11 @@ export default function Sidebar() {
     <aside className="w-64 shrink-0 border-r border-border bg-bg-sub h-screen sticky top-0 flex flex-col">
       <div className="px-5 py-5 border-b border-border">
         <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-lg bg-brand text-brand-fg flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-brand-gradient text-brand-fg flex items-center justify-center shadow-card">
             <TruckIcon className="w-5 h-5" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-semibold tracking-tight">Logistics</span>
+            <span className="text-base font-semibold tracking-tight text-brand-gradient">Logistics</span>
             <span className="text-xs text-fg-muted -mt-0.5">Command Center</span>
           </div>
         </div>

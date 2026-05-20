@@ -35,6 +35,9 @@ prisma/dev.db-journal
 prisma/*.db
 prisma/*.db-journal
 
+# generated Prisma client
+src/generated/prisma/
+
 # vercel
 .vercel
 
